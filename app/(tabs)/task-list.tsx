@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,39 +13,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { icons, images } from "@/constants";
 import { useFocusEffect } from "@react-navigation/native";
 
-const motivationalPhrases = [
-  "The journey of a thousand miles begins with one step.",
-  "Don’t watch the clock; do what it does. Keep going.",
-  "The only way to achieve the impossible is to believe it is possible.",
-  "The future depends on what you do today.",
-  "Success is the sum of small efforts, repeated day in and day out.",
-  "You don’t have to be great to start, but you have to start to be great.",
-  "Believe you can and you're halfway there.",
-  "Your limitation—it's only your imagination.",
-  "The key to success is to focus on goals, not obstacles.",
-  "Start where you are. Use what you have. Do what you can.",
-  "Success is not final, failure is not fatal: It is the courage to continue that counts.",
-  "Dream big and dare to fail.",
-  "Don’t wait. The time will never be just right.",
-  "Start each day with a positive thought and a grateful heart.",
-  "Small daily improvements over time lead to stunning results.",
-  "Motivation gets you going, but discipline keeps you growing.",
-  "The secret to getting ahead is getting started.",
-  "Focus on being productive instead of busy.",
-  "Hard work beats talent when talent doesn’t work hard.",
-  "The best way to predict the future is to create it.",
-  "Don’t limit your challenges. Challenge your limits.",
-  "It always seems impossible until it’s done.",
-  "The harder you work for something, the greater you’ll feel when you achieve it.",
-  "Push yourself, because no one else is going to do it for you.",
-  "Success doesn’t come from what you do occasionally, it comes from what you do consistently.",
-  "The only place where success comes before work is in the dictionary.",
-  "Keep your eyes on the stars, and your feet on the ground.",
-  "You are never too old to set another goal or to dream a new dream.",
-  "Quality is not an act, it is a habit.",
-  "Success usually comes to those who are too busy to be looking for it.",
-];
-
 export type Task = {
   id: number;
   title: string;
@@ -55,21 +22,10 @@ export type Task = {
 
 const TaskListScreen: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [motivationalPhrase, setMotivationalPhrase] = useState<string>("");
 
   useEffect(() => {
     getTasks();
   }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      // Generate a random index to select a phrase
-      const randomIndex = Math.floor(
-        Math.random() * motivationalPhrases.length
-      );
-      setMotivationalPhrase(motivationalPhrases[randomIndex]);
-    }, [])
-  );
 
   const getTasks = async () => {
     try {
@@ -168,13 +124,12 @@ const TaskListScreen: React.FC = () => {
 
   const isDone = tasks.filter((task) => task.status !== "bin").length === 0;
   const activeTasks = tasks.filter((task) => task.status !== "bin").length;
-  console.log(isDone);
 
   return (
     <SafeAreaView className="bg-primary flex-1">
-      {/* <ScrollView>
-        <View className="w-screen z-10 bg-primary h-64">
-          <Text className="text-2xl mt-7 px-4 text-center text-white">
+      <ScrollView>
+        <View className="w-screen z-10 bg-primary h-64 flex justify-center items-center">
+          <Text className="text-2xl px-4 text-center text-white">
             {isDone
               ? "Add new tasks to start progressing"
               : `You Have ${activeTasks} Tasks to Complete`}
@@ -189,16 +144,7 @@ const TaskListScreen: React.FC = () => {
                 {percentage}%
               </Text>
             ) : (
-              <Link
-                href="/(tabs)/task-add"
-                className="flex justify-center items-center"
-              >
-                <Image
-                  source={icons.plus}
-                  resizeMode="contain"
-                  className="w-10"
-                />
-              </Link>
+              <></>
             )}
           </View>
         </View>
@@ -207,7 +153,7 @@ const TaskListScreen: React.FC = () => {
           {renderTasks("inProgress", "In Progress")}
           {renderTasks("done", "Completed")}
         </View>
-      </ScrollView> */}
+      </ScrollView>
     </SafeAreaView>
   );
 };
