@@ -1,58 +1,89 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { View, Text, TextInput, StyleSheet } from "react-native";
 import axios from "axios";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  useForm,
+  Controller,
+  SubmitHandler,
+  FieldValues,
+} from "react-hook-form";
+import { Button } from "react-native-paper";
+import { Task, getAllTasks, createTask } from "@/helpers/api";
 
 const TaskAddScreen: React.FC = () => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("pending");
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const [tasks, setTasks] = useState<Task[] | null>(null);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const router = useRouter();
 
-  const handleSubmit = async () => {
-    try {
-      await axios.post("https://192.168.1.6:3000/api/tasks", {
-        title,
-        description,
-        status,
-      });
-      useRouter();
-    } catch (error) {
-      console.error(error);
-    }
+  useEffect(() => {
+    const fetchTask = async () => {
+      try {
+        const tasks = await getAllTasks();
+        setTasks(tasks);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchTask();
+  }, []);
+
+  const submit: SubmitHandler<FieldValues> = async (data) => {
+    const tasksData = { ...data, status: "pending" };
+    const newTask = await createTask(tasksData);
+    router.push("/(tabs)/task-list");
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Title"
-        value={title}
-        onChangeText={setTitle}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Description"
-        value={description}
-        onChangeText={setDescription}
-      />
-      <Button title="Save Task" onPress={handleSubmit} />
+    <SafeAreaView className="p-4">
+      <View className="flex justify-center items-center rounded-3xl bg-white p-4">
+        <Text className="text-2xl font-bold mb-2">Create a new task</Text>
+        <Controller
+          name="title"
+          control={control}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              className="mt-4 p-2 w-full bg-gray-200 text-gray-900 border border-gray-300 rounded-md"
+              placeholder="Title"
+              value={value}
+              onBlur={onBlur}
+              onChangeText={onChange}
+            />
+          )}
+        />
+
+        <Controller
+          name="description"
+          control={control}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              multiline
+              className="mt-4 p-2 w-full bg-gray-200 text-gray-900 border border-gray-300 rounded-md"
+              placeholder="Description"
+              value={value}
+              onBlur={onBlur}
+              onChangeText={onChange}
+            />
+          )}
+        />
+
+        <Button
+          className="mt-4 w-full"
+          textColor="white"
+          buttonColor="blue"
+          onPress={handleSubmit(submit)}
+        >
+          Submit
+        </Button>
+      </View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 8,
-    marginVertical: 8,
-  },
-});
 
 export default TaskAddScreen;

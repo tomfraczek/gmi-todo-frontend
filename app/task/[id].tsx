@@ -29,7 +29,7 @@ const TaskScreen: React.FC = () => {
         const taskData = await getTask(Number(id));
         setTask(taskData);
       } catch (error) {
-        console.error("Błąd podczas pobierania zadania:", error);
+        console.error("Error fetching task:", error);
       }
     };
 
