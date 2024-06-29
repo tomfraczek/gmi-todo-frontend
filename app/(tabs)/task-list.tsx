@@ -5,6 +5,7 @@ import { Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SwipeableRow from "@/components/SwipeableRow";
 import { Icon, MD3Colors } from "react-native-paper";
+import TaskCard from "@/components/TaskCard";
 
 export type Task = {
   id: number;
@@ -46,22 +47,6 @@ const TaskListScreen: React.FC = () => {
     }
   };
 
-  const deleteTaskPermanently = async (id: number) => {
-    try {
-      await axios.delete(`http://192.168.1.6:3000/api/tasks/${id}`);
-      getTasks();
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(
-          "Error deleting task:",
-          error.response ? error.response.data : error.message
-        );
-      } else {
-        console.error("Unexpected error:", error);
-      }
-    }
-  };
-
   const renderTasks = (status: string, title: string) => {
     const filteredTasks = tasks.filter((task) => task.status === status);
     return (
@@ -73,58 +58,21 @@ const TaskListScreen: React.FC = () => {
               <SwipeableRow
                 key={item.id}
                 leftActionText={
-                  item.status === "pending"
-                    ? "Start Progressing"
-                    : item.status === "inProgress"
-                    ? "Move to Done"
-                    : "Move to Bin"
+                  item.status === "pending" ? "Completed" : "Todo"
                 }
-                rightActionText={
-                  item.status === "inProgress"
-                    ? "Stop Progressing"
-                    : item.status === "done"
-                    ? "Start Progressing"
-                    : "Move to Bin"
-                }
+                rightActionText="Move to Bin"
                 onLeftAction={() =>
                   updateTaskStatus(
                     item.id,
-                    item.status === "pending" ? "inProgress" : "done"
+                    item.status === "pending" ? "done" : "pending"
                   )
                 }
-                onRightAction={() =>
-                  updateTaskStatus(
-                    item.id,
-                    item.status === "pending"
-                      ? "bin"
-                      : item.status === "inProgress"
-                      ? "pending"
-                      : "inProgress"
-                  )
-                }
+                onRightAction={() => updateTaskStatus(item.id, "bin")}
               >
-                <TouchableWithoutFeedback
+                <TaskCard
                   onPress={() => router.push(`/task/${item.id}`)}
-                >
-                  <View
-                    className={`p-4 rounded-lg flex flex-row items-center justify-between ${
-                      item.status === "pending"
-                        ? "bg-yellow-500"
-                        : item.status === "inProgress"
-                        ? "bg-blue-600"
-                        : "bg-green-400"
-                    }`}
-                  >
-                    <View className=" w-10/12">
-                      <Text className="text-white text-xl font-semibold">
-                        {item.title}
-                      </Text>
-                      <Text className="text-white">{item.description}</Text>
-                    </View>
-
-                    <Icon source="chevron-right" size={50} color="#fff" />
-                  </View>
-                </TouchableWithoutFeedback>
+                  item={item}
+                />
               </SwipeableRow>
             </View>
           ))
@@ -174,18 +122,17 @@ const TaskListScreen: React.FC = () => {
             }`}
           >
             {!isDone && (
-              <View className="flex flex-col justify-center items-center">
+              <View className="flex flex-col justify-center items-center relative top-2">
                 <Text className="text-white text-5xl font-bold ">
                   {percentage}%
                 </Text>
-                {/* <Text className="text-sm text-white">DONE</Text> */}
+                <Text className="text-sm text-white">DONE</Text>
               </View>
             )}
           </View>
         </View>
         <View className="rounded-3xl bg-white z-0">
           {renderTasks("pending", "Todo")}
-          {renderTasks("inProgress", "In Progress")}
           {renderTasks("done", "Completed")}
         </View>
       </ScrollView>

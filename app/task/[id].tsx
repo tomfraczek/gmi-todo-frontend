@@ -6,10 +6,12 @@ import {
   TouchableWithoutFeedback,
   TextInput,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Icon, Provider as PaperProvider } from "react-native-paper";
 import EditModal from "@/components/Modal";
 import useTask from "@/hooks/useTask";
+import { Task } from "../(tabs)/task-list";
+import { getTask, deleteTask, updateTask } from "@/helpers/api";
 
 const TaskScreen: React.FC = () => {
   const [task, setTask] = useState<Task | null>(null);
@@ -18,22 +20,20 @@ const TaskScreen: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const { id } = useLocalSearchParams();
-  const { getTasks, updateTask, loading, error } = useTask();
+  const { getTasks, loading, error } = useTask();
+  const router = useRouter();
 
   useEffect(() => {
-    if (id) {
-      getTasks(Number(id))
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setTask(data[0]);
-          } else {
-            setTask(data); // Assuming data is a single task when id is provided
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching task:", error);
-        });
-    }
+    const fetchTask = async () => {
+      try {
+        const taskData = await getTask(Number(id));
+        setTask(taskData);
+      } catch (error) {
+        console.error("Błąd podczas pobierania zadania:", error);
+      }
+    };
+
+    fetchTask();
   }, [id]);
 
   useEffect(() => {
@@ -43,10 +43,18 @@ const TaskScreen: React.FC = () => {
     }
   }, [task]);
 
+  const handleRestore = async () => {
+    try {
+      await updateTask(Number(id), { status: "pending" });
+      router.back();
+    } catch (error) {
+      console.error("Error updating task", error);
+    }
+  };
+
   const handleSave = async () => {
     try {
-      await updateTask({
-        id: Number(id),
+      await updateTask(Number(id), {
         title: taskTitle,
         description: taskDescription,
       });
@@ -57,9 +65,14 @@ const TaskScreen: React.FC = () => {
     }
   };
 
-  const handleMoveToBin = async () => {
+  const handleConfirm = async () => {
     try {
-      await updateTask({ id: Number(id), status: "bin" });
+      if (task?.status === "bin") {
+        await deleteTask(Number(id));
+        router.back();
+      } else {
+        await updateTask(Number(id), { status: "bin" });
+      }
       setShowConfirmModal(false);
       getTasks(Number(id)).then((data) => setTask(data));
     } catch (error) {
@@ -84,21 +97,46 @@ const TaskScreen: React.FC = () => {
             <Text className="text-2xl font-bold">
               {task ? task.title : "Loading..."}
             </Text>
-            <TouchableWithoutFeedback onPress={() => setShowEditModal(true)}>
-              <Icon name="pencil" size={24} color="#000" />
-            </TouchableWithoutFeedback>
+            <View>
+              <TouchableWithoutFeedback onPress={() => setShowEditModal(true)}>
+                <View>
+                  <Icon source="pencil" size={24} color="#000" />
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
           </View>
           <Text className="mt-4">{task?.description}</Text>
           <Text className="mt-4">Status: {status}</Text>
         </View>
-        <Button
-          className="mt-4"
-          textColor="white"
-          buttonColor="red"
-          onPress={() => setShowConfirmModal(true)}
-        >
-          Move to bin
-        </Button>
+        {task?.status === "bin" ? (
+          <View>
+            <Button
+              className="mt-4"
+              textColor="white"
+              buttonColor="blue"
+              onPress={handleRestore}
+            >
+              Restore from Recycle Bin
+            </Button>
+            <Button
+              className="mt-4"
+              textColor="white"
+              buttonColor="red"
+              onPress={() => setShowConfirmModal(true)}
+            >
+              Remove Permanently
+            </Button>
+          </View>
+        ) : (
+          <Button
+            className="mt-4"
+            textColor="white"
+            buttonColor="red"
+            onPress={() => setShowConfirmModal(true)}
+          >
+            Move to bin
+          </Button>
+        )}
       </ScrollView>
 
       <EditModal
@@ -133,7 +171,9 @@ const TaskScreen: React.FC = () => {
         onDismiss={() => setShowConfirmModal(false)}
       >
         <Text className="text-xl mb-4">
-          Are you sure you want to move this task to the bin?
+          {task?.status === "bin"
+            ? "Are you sure you want to permanently remove this task?"
+            : "Are you sure you want to move this task to the bin?"}
         </Text>
         <View className="flex flex-row justify-between">
           <Button
@@ -142,10 +182,10 @@ const TaskScreen: React.FC = () => {
             buttonColor="gray"
             onPress={() => setShowConfirmModal(false)}
           >
-            No
+            Cancel
           </Button>
-          <Button textColor="white" buttonColor="red" onPress={handleMoveToBin}>
-            Yes
+          <Button textColor="white" buttonColor="red" onPress={handleConfirm}>
+            Confirm
           </Button>
         </View>
       </EditModal>

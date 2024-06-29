@@ -17,7 +17,7 @@ const TaskAddScreen: React.FC = () => {
         description,
         status,
       });
-      useRouter().back();
+      useRouter();
     } catch (error) {
       console.error(error);
     }
