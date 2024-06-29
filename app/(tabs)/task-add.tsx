@@ -10,41 +10,13 @@ const TaskAddScreen: React.FC = () => {
   const [status, setStatus] = useState("pending");
   const { id } = useLocalSearchParams<{ id?: string }>();
 
-  useEffect(() => {
-    if (id) {
-      fetchTask();
-    }
-  }, [id]);
-
-  const fetchTask = async () => {
-    try {
-      const response = await axios.get(
-        `https://192.168.1.6:3000/api/tasks/${id}`
-      );
-      const { title, description, status } = response.data;
-      setTitle(title);
-      setDescription(description);
-      setStatus(status);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const handleSubmit = async () => {
     try {
-      if (id) {
-        await axios.put(`https://192.168.1.6:3000/api/tasks/${id}`, {
-          title,
-          description,
-          status,
-        });
-      } else {
-        await axios.post("https://192.168.1.6:3000/api/tasks", {
-          title,
-          description,
-          status,
-        });
-      }
+      await axios.post("https://192.168.1.6:3000/api/tasks", {
+        title,
+        description,
+        status,
+      });
       useRouter().back();
     } catch (error) {
       console.error(error);
@@ -64,10 +36,6 @@ const TaskAddScreen: React.FC = () => {
         placeholder="Description"
         value={description}
         onChangeText={setDescription}
-      />
-      <Button
-        title={status === "done" ? "Mark as Pending" : "Mark as Done"}
-        onPress={() => setStatus(status === "done" ? "pending" : "done")}
       />
       <Button title="Save Task" onPress={handleSubmit} />
     </SafeAreaView>

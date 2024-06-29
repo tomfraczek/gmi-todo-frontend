@@ -1,17 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
-import {
-  View,
-  Text,
-  Button,
-  StyleSheet,
-  ScrollView,
-  Image,
-} from "react-native";
+import { useState, useEffect } from "react";
+import { View, Text, ScrollView, TouchableWithoutFeedback } from "react-native";
 import axios from "axios";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { icons, images } from "@/constants";
-import { useFocusEffect } from "@react-navigation/native";
+import SwipeableRow from "@/components/SwipeableRow";
+import { Icon, MD3Colors } from "react-native-paper";
 
 export type Task = {
   id: number;
@@ -22,6 +15,7 @@ export type Task = {
 
 const TaskListScreen: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     getTasks();
@@ -38,18 +32,28 @@ const TaskListScreen: React.FC = () => {
 
   const updateTaskStatus = async (id: number, status: string) => {
     try {
-      const response = await axios.put(
-        `http://192.168.1.6:3000/api/tasks/${id}`,
-        {
-          status: status,
-        }
-      );
-      console.log("Response from server:", response.data);
+      await axios.put(`http://192.168.1.6:3000/api/tasks/${id}`, { status });
       getTasks();
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error(
           "Error updating task status:",
+          error.response ? error.response.data : error.message
+        );
+      } else {
+        console.error("Unexpected error:", error);
+      }
+    }
+  };
+
+  const deleteTaskPermanently = async (id: number) => {
+    try {
+      await axios.delete(`http://192.168.1.6:3000/api/tasks/${id}`);
+      getTasks();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          "Error deleting task:",
           error.response ? error.response.data : error.message
         );
       } else {
@@ -64,34 +68,64 @@ const TaskListScreen: React.FC = () => {
       <SafeAreaView className="mb-4 p-4">
         <Text className="text-2xl font-bold mb-2">{title}</Text>
         {filteredTasks.length > 0 ? (
-          filteredTasks.map((item) => (
-            <View key={item.id} className="mb-4 p-4 bg-gray-200 rounded-lg">
-              <Text className="text-xl font-semibold">{item.title}</Text>
-              <Text>{item.description}</Text>
-              <Button
-                title={
+          filteredTasks.map((item, i) => (
+            <View className="mb-4" key={item.title + i}>
+              <SwipeableRow
+                key={item.id}
+                leftActionText={
                   item.status === "pending"
                     ? "Start Progressing"
                     : item.status === "inProgress"
-                    ? "Mark as Complete"
-                    : "Move to Trash Bin"
+                    ? "Move to Done"
+                    : "Move to Bin"
                 }
-                onPress={() => {
-                  if (item.status === "pending") {
-                    updateTaskStatus(item.id, "inProgress");
-                  } else if (item.status === "inProgress") {
-                    updateTaskStatus(item.id, "done");
-                  } else if (item.status === "done") {
-                    updateTaskStatus(item.id, "bin");
-                  }
-                }}
-              />
-              <Link href={`/screens/task-detail?id=${item.id}`}>
-                <Text className="text-blue-500 mt-2">View Details</Text>
-              </Link>
-              <Link href={`/task-form?id=${item.id}`}>
-                <Text className="text-blue-500 mt-2">Edit</Text>
-              </Link>
+                rightActionText={
+                  item.status === "inProgress"
+                    ? "Stop Progressing"
+                    : item.status === "done"
+                    ? "Start Progressing"
+                    : "Move to Bin"
+                }
+                onLeftAction={() =>
+                  updateTaskStatus(
+                    item.id,
+                    item.status === "pending" ? "inProgress" : "done"
+                  )
+                }
+                onRightAction={() =>
+                  updateTaskStatus(
+                    item.id,
+                    item.status === "pending"
+                      ? "bin"
+                      : item.status === "inProgress"
+                      ? "pending"
+                      : "inProgress"
+                  )
+                }
+              >
+                <TouchableWithoutFeedback
+                  onPress={() => router.push(`/task/${item.id}`)}
+                >
+                  <View
+                    className={`p-4 rounded-lg flex flex-row items-center justify-between ${
+                      item.status === "pending"
+                        ? "bg-yellow-500"
+                        : item.status === "inProgress"
+                        ? "bg-blue-600"
+                        : "bg-green-400"
+                    }`}
+                  >
+                    <View className=" w-10/12">
+                      <Text className="text-white text-xl font-semibold">
+                        {item.title}
+                      </Text>
+                      <Text className="text-white">{item.description}</Text>
+                    </View>
+
+                    <Icon source="chevron-right" size={50} color="#fff" />
+                  </View>
+                </TouchableWithoutFeedback>
+              </SwipeableRow>
             </View>
           ))
         ) : (
@@ -139,12 +173,13 @@ const TaskListScreen: React.FC = () => {
               isDone && "bg-white"
             }`}
           >
-            {!isDone ? (
-              <Text className="text-white text-5xl font-bold">
-                {percentage}%
-              </Text>
-            ) : (
-              <></>
+            {!isDone && (
+              <View className="flex flex-col justify-center items-center">
+                <Text className="text-white text-5xl font-bold ">
+                  {percentage}%
+                </Text>
+                {/* <Text className="text-sm text-white">DONE</Text> */}
+              </View>
             )}
           </View>
         </View>
