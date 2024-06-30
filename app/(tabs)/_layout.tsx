@@ -1,32 +1,8 @@
 import "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { Tabs } from "expo-router";
-import { View, Image, Text } from "react-native";
-import { icons } from "@/constants";
-
-interface TabIconProps {
-  icon: any;
-  color: string;
-  name: string;
-  focused: boolean;
-}
-
-const TabIcon: React.FC<TabIconProps> = ({ icon, color, name, focused }) => (
-  <View className="flex items-center justify-center gap-2">
-    <Image
-      source={icon}
-      resizeMode="contain"
-      style={{ tintColor: color }}
-      className="w-6 h-6"
-    />
-    <Text
-      className={`${focused ? "font-psemibold" : "font-pregular"} text-xs`}
-      style={{ color }}
-    >
-      {name}
-    </Text>
-  </View>
-);
+import { icon } from "@/constants";
+import TabIcon from "@/components/TabIcon";
 
 export default function Layout() {
   return (
@@ -51,7 +27,7 @@ export default function Layout() {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.gear}
+                icon={icon.gear}
                 color={color}
                 name="Tasks"
                 focused={focused}
@@ -66,7 +42,7 @@ export default function Layout() {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.plus}
+                icon={icon.plus}
                 color={color}
                 name="Add Task"
                 focused={focused}
@@ -81,7 +57,7 @@ export default function Layout() {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.bin}
+                icon={icon.bin}
                 color={color}
                 name="Trash Bin"
                 focused={focused}

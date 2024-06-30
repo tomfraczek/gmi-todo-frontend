@@ -1,5 +1,5 @@
-import { Task } from "@/app/(tabs)/task-list";
-import { View, Text, ScrollView, TouchableWithoutFeedback } from "react-native";
+import { Task } from "@/app";
+import { View, Text, TouchableWithoutFeedback } from "react-native";
 import { Icon } from "react-native-paper";
 
 type TaskCardProps = {

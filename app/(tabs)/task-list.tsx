@@ -1,51 +1,23 @@
-import { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableWithoutFeedback } from "react-native";
-import axios from "axios";
-import { Link, useRouter } from "expo-router";
+import { useEffect } from "react";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDispatch, useSelector } from "react-redux";
 import SwipeableRow from "@/components/SwipeableRow";
-import { Icon, MD3Colors } from "react-native-paper";
 import TaskCard from "@/components/TaskCard";
+import { AppDispatch, RootState } from "@/store/store";
+import { fetchTasks, updateTaskThunk } from "@/store/taskSlice";
 
-export type Task = {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-};
-
-const TaskListScreen: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+const TaskListScreen = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { tasks, loading, error } = useSelector(
+    (state: RootState) => state.tasks
+  );
   const router = useRouter();
 
   useEffect(() => {
-    getTasks();
-  }, []);
-
-  const getTasks = async () => {
-    try {
-      const { data } = await axios.get("http://192.168.1.6:3000/api/tasks/");
-      setTasks(data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  };
-
-  const updateTaskStatus = async (id: number, status: string) => {
-    try {
-      await axios.put(`http://192.168.1.6:3000/api/tasks/${id}`, { status });
-      getTasks();
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(
-          "Error updating task status:",
-          error.response ? error.response.data : error.message
-        );
-      } else {
-        console.error("Unexpected error:", error);
-      }
-    }
-  };
+    dispatch(fetchTasks());
+  }, [dispatch]);
 
   const renderTasks = (status: string, title: string) => {
     const filteredTasks = tasks.filter((task) => task.status === status);
@@ -62,12 +34,23 @@ const TaskListScreen: React.FC = () => {
                 }
                 rightActionText="Move to Bin"
                 onLeftAction={() =>
-                  updateTaskStatus(
-                    item.id,
-                    item.status === "pending" ? "done" : "pending"
+                  dispatch(
+                    updateTaskThunk({
+                      id: item.id,
+                      updateData: {
+                        status: item.status === "pending" ? "done" : "pending",
+                      },
+                    })
                   )
                 }
-                onRightAction={() => updateTaskStatus(item.id, "bin")}
+                onRightAction={() =>
+                  dispatch(
+                    updateTaskThunk({
+                      id: item.id,
+                      updateData: { status: "bin" },
+                    })
+                  )
+                }
               >
                 <TaskCard
                   onPress={() => router.push(`/task/${item.id}`)}
@@ -106,6 +89,22 @@ const TaskListScreen: React.FC = () => {
 
   const isDone = tasks.filter((task) => task.status !== "bin").length === 0;
   const activeTasks = tasks.filter((task) => task.status !== "bin").length;
+
+  if (loading) {
+    return (
+      <SafeAreaView className="bg-primary flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#fff" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView className="bg-primary flex-1 justify-center items-center">
+        <Text className="text-white">{error}</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="bg-primary flex-1">

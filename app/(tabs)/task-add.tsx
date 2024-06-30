@@ -13,26 +13,12 @@ import { Button } from "react-native-paper";
 import { Task, getAllTasks, createTask } from "@/helpers/api";
 
 const TaskAddScreen: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[] | null>(null);
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm();
   const router = useRouter();
-
-  useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        const tasks = await getAllTasks();
-        setTasks(tasks);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-      }
-    };
-
-    fetchTask();
-  }, []);
 
   const submit: SubmitHandler<FieldValues> = async (data) => {
     const tasksData = { ...data, status: "pending" };

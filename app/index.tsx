@@ -1,28 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Image } from "react-native";
-import axios from "axios";
+// app/index.ts
+import { useEffect } from "react";
+import { View, Text } from "react-native";
 import { Link, SplashScreen } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
-import { icons } from "@/constants";
+import { useDispatch, useSelector } from "react-redux";
+import { icon } from "@/constants";
+import DashboardCard from "@/components/DashboardCard";
+import { AppDispatch, RootState } from "@/store/store";
+import { fetchTasks } from "@/store/taskSlice";
 
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  tags: string[];
-}
-
-const Dashboard: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [inProgressCount, setInProgressCount] = useState(0);
-  const [doneCount, setDoneCount] = useState(0);
-
-  SplashScreen.preventAutoHideAsync();
-
+const Dashboard = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const tasks = useSelector((state: RootState) => state.tasks.tasks);
   const [fontsLoaded, error] = useFonts({
     "Poppins-Black": require("../assets/fonts/Poppins-Black.ttf"),
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
@@ -35,34 +25,8 @@ const Dashboard: React.FC = () => {
     "Poppins-Thin": require("../assets/fonts/Poppins-Thin.ttf"),
   });
 
-  const getTasks = async () => {
-    try {
-      const { data } = await axios.get<Task[]>(
-        "http://192.168.1.6:3000/api/tasks/"
-      );
-      setTasks(data);
-      calculateTaskCounts(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const calculateTaskCounts = (tasks: Task[]) => {
-    const pending = tasks.filter((task) => task.status === "pending").length;
-    const inProgress = tasks.filter(
-      (task) => task.status === "inProgress"
-    ).length;
-    const done = tasks.filter((task) => task.status === "done").length;
-    setPendingCount(pending);
-    setInProgressCount(inProgress);
-    setDoneCount(done);
-  };
-
   useEffect(() => {
-    getTasks();
-  }, []);
-
-  useEffect(() => {
+    SplashScreen.preventAutoHideAsync();
     if (error) throw error;
 
     if (fontsLoaded) {
@@ -70,40 +34,33 @@ const Dashboard: React.FC = () => {
     }
   }, [fontsLoaded, error]);
 
+  useEffect(() => {
+    dispatch(fetchTasks());
+  }, [dispatch]);
+
   if (!fontsLoaded) {
     return null;
   }
 
+  const countPending = tasks.filter((task) => task.status === "pending").length;
+  const countDone = tasks.filter((task) => task.status === "done").length;
+
   return (
     <SafeAreaView className="flex items-center justify-between flex-1 font-pbold my-10 px-5">
       <Text className="justify-self-start text-3xl">Dashboard</Text>
-      <View className="flex flex-wrap flex-row justify-evenly mb-auto w-full gap-5 mt-3">
-        <View className="overflow-hidden over relative w-full bg-yellow-500 rounded-2xl h-32 p-5">
-          <Text className="text-white text-xl">Pending: {pendingCount}</Text>
-          <Image
-            source={icons.expired}
-            resizeMode="contain"
-            className="w-24 h-24 absolute -right-8 -bottom-2"
-          />
-        </View>
-        <View className="overflow-hidden relative w-full bg-blue-600 rounded-2xl h-32 p-5">
-          <Text className="text-white text-xl">
-            In progress: {inProgressCount}
-          </Text>
-          <Image
-            source={icons.settings}
-            resizeMode="contain"
-            className="w-24 h-24 absolute -right-5 -bottom-2"
-          />
-        </View>
-        <View className="overflow-hidden over relative w-full bg-green-400 rounded-2xl h-32 p-5">
-          <Text className="text-white text-xl">Completed: {doneCount}</Text>
-          <Image
-            source={icons.checklist}
-            resizeMode="contain"
-            className="w-24 h-24 absolute -right-5 -bottom-2"
-          />
-        </View>
+      <View className="flex flex-wrap flex-row justify-evenly mb-auto w-full mt-3">
+        <DashboardCard
+          bgClass="bg-yellow-500"
+          count={countPending}
+          icon={icon.expired}
+          title="Pending"
+        />
+        <DashboardCard
+          bgClass="bg-green-400"
+          count={countDone}
+          icon={icon.checklist}
+          title="Completed"
+        />
       </View>
 
       <View className="flex flex-row justify-between items-center w-full">

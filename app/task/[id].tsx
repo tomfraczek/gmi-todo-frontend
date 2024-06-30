@@ -9,9 +9,9 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Icon, Provider as PaperProvider } from "react-native-paper";
 import EditModal from "@/components/Modal";
-import useTask from "@/hooks/useTask";
-import { Task } from "../(tabs)/task-list";
 import { getTask, deleteTask, updateTask } from "@/helpers/api";
+import useTask from "@/hooks/useTask";
+import { Task } from "@/app";
 
 const TaskScreen: React.FC = () => {
   const [task, setTask] = useState<Task | null>(null);
@@ -20,28 +20,29 @@ const TaskScreen: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const { id } = useLocalSearchParams();
-  const { getTasks, loading, error } = useTask();
+  const { createNewTask, getTaskById } = useTask();
   const router = useRouter();
+  const {} = useTask();
 
-  useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        const taskData = await getTask(Number(id));
-        setTask(taskData);
-      } catch (error) {
-        console.error("Error fetching task:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchTask = async () => {
+  //     try {
+  //       const taskData = await getTask(Number(id));
+  //       setTask(taskData);
+  //     } catch (error) {
+  //       console.error("Error fetching task:", error);
+  //     }
+  //   };
 
-    fetchTask();
-  }, [id]);
+  //   fetchTask();
+  // }, []);
 
-  useEffect(() => {
-    if (task) {
-      setTaskDescription(task.description);
-      setTaskTitle(task.title);
-    }
-  }, [task]);
+  // useEffect(() => {
+  //   if (task) {
+  //     setTaskDescription(task.description);
+  //     setTaskTitle(task.title);
+  //   }
+  // }, [task]);
 
   const handleRestore = async () => {
     try {

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Button, StyleSheet } from "react-native";
-import axios from "axios";
+import { View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import TaskCard from "@/components/TaskCard";
+import useTask from "@/hooks/useTask";
 
 interface Task {
   id: number;
@@ -13,12 +12,8 @@ interface Task {
 }
 
 const BinScreen: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const { tasks } = useTask();
   const router = useRouter();
-
-  useEffect(() => {
-    getTasks();
-  }, []);
 
   const renderTasks = (status: string, title: string) => {
     const filteredTasks = tasks.filter((task) => task.status === status);
@@ -39,37 +34,6 @@ const BinScreen: React.FC = () => {
         )}
       </SafeAreaView>
     );
-  };
-
-  const updateTaskStatus = async (id: number, status: string) => {
-    try {
-      const response = await axios.put(
-        `http://192.168.1.6:3000/api/tasks/${id}`,
-        {
-          status: status,
-        }
-      );
-      console.log("Response from server:", response.data);
-      getTasks();
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(
-          "Error updating task status:",
-          error.response ? error.response.data : error.message
-        );
-      } else {
-        console.error("Unexpected error:", error);
-      }
-    }
-  };
-
-  const getTasks = async () => {
-    try {
-      const { data } = await axios.get("http://192.168.1.6:3000/api/tasks/");
-      setTasks(data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
   };
 
   return <SafeAreaView>{renderTasks("bin", "Trash Bin")}</SafeAreaView>;

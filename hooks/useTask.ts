@@ -1,68 +1,95 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import {
+  getAllTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  getTask,
+} from "@/helpers/api"; // Załóżmy, że funkcje te są zdefiniowane w api.ts
 
-interface UpdateTaskParams {
-  id?: number;
-  status?: string;
-  title?: string;
-  description?: string;
-  [key: string]: any;
+const API_URL = "http://192.168.1.6:3000/api/tasks/";
+
+export interface Task {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
 }
 
 const useTask = () => {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [tasks, setTasks] = useState<any[]>([]);
 
-  const updateTask = async ({ id, ...updateData }: UpdateTaskParams) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (id !== undefined) {
-        const response = await axios.put(
-          `http://192.168.1.6:3000/api/tasks/${id}`,
-          updateData
-        );
-        console.log("Task updated successfully:", response.data);
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setLoading(true);
+      try {
+        const data = await getAllTasks();
+        setTasks(data);
+      } catch (error) {
+        throw new Error("Error fetching tasks");
+      } finally {
         setLoading(false);
-        return response.data;
       }
-    } catch (error) {
-      setLoading(false);
-      if (axios.isAxiosError(error)) {
-        setError(error.response ? error.response.data : error.message);
-      } else {
-        setError("Unexpected error occurred");
-      }
-      throw error;
-    }
-  };
+    };
 
-  const getTasks = async (id?: number) => {
-    setLoading(true);
-    setError(null);
+    fetchTasks();
+  }, []);
 
+  const createNewTask = async (newTaskData: Partial<Task>): Promise<Task> => {
     try {
-      const response = id
-        ? await axios.get(`http://192.168.1.6:3000/api/tasks/${id}`)
-        : await axios.get(`http://192.168.1.6:3000/api/tasks/`);
-      console.log("Fetched tasks successfully:", response.data);
-      setTasks(response.data);
-      setLoading(false);
-      return response.data;
+      const createdTask = await createTask(newTaskData);
+      setTasks([...tasks, createdTask]);
+      return createdTask;
     } catch (error) {
-      setLoading(false);
-      if (axios.isAxiosError(error)) {
-        setError(error.response ? error.response.data : error.message);
-      } else {
-        setError("Unexpected error occurred");
-      }
-      throw error;
+      throw new Error("Error creating task");
     }
   };
 
-  return { updateTask, getTasks, loading, error, tasks };
+  const updateTaskStatus = async (
+    id: number,
+    newStatus: string
+  ): Promise<Task> => {
+    try {
+      const updatedTask = await updateTask(id, { status: newStatus });
+      const updatedTasks = tasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task
+      );
+      setTasks(updatedTasks);
+      return updatedTask;
+    } catch (error) {
+      throw new Error("Error updating task");
+    }
+  };
+
+  const getTaskById = async (id: number): Promise<void> => {
+    try {
+      await getTask(id);
+      const filteredTasks = tasks.filter((task) => task.id !== id);
+      setTasks(filteredTasks);
+    } catch (error) {
+      throw new Error("Error deleting task");
+    }
+  };
+
+  const deleteTaskById = async (id: number): Promise<void> => {
+    try {
+      await deleteTask(id);
+      const filteredTasks = tasks.filter((task) => task.id !== id);
+      setTasks(filteredTasks);
+    } catch (error) {
+      throw new Error("Error deleting task");
+    }
+  };
+
+  return {
+    tasks,
+    loading,
+    createNewTask,
+    updateTaskStatus,
+    deleteTaskById,
+  };
 };
 
 export default useTask;
