@@ -38,7 +38,7 @@ const BinScreen: React.FC = () => {
             <View className="mb-4" key={item.title + i}>
               <SwipeableRow
                 key={item.id}
-                leftActionText="Restore from Recycle Bin"
+                leftActionText="Restore"
                 rightActionText="Delete permanently"
                 onLeftAction={() =>
                   dispatch(

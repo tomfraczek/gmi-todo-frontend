@@ -1,5 +1,11 @@
-import { useEffect } from "react";
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,8 +13,11 @@ import SwipeableRow from "@/components/SwipeableRow";
 import TaskCard from "@/components/TaskCard";
 import { AppDispatch, RootState } from "@/store/store";
 import { fetchTasks, updateTaskThunk } from "@/store/taskSlice";
+import { Icon } from "react-native-paper";
+import TutorialModal from "@/components/TutorialModal";
 
 const TaskListScreen = () => {
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const { tasks, loading, error } = useSelector(
     (state: RootState) => state.tasks
@@ -130,9 +139,20 @@ const TaskListScreen = () => {
             )}
           </View>
         </View>
-        <View className="rounded-3xl bg-white z-0">
+        <View className="rounded-3xl bg-white z-0 relative">
+          <View className="absolute -top-[-10px] -right-[-20px] z-30 border border-gray-400 w-9 rounded-lg flex justify-center items-center">
+            <TouchableWithoutFeedback
+              onPress={() => setShowTutorialModal(true)}
+            >
+              <Text className="text-gray-400 text-2xl">?</Text>
+            </TouchableWithoutFeedback>
+          </View>
           {renderTasks("pending", "Todo")}
           {renderTasks("done", "Completed")}
+          <TutorialModal
+            visible={showTutorialModal}
+            onDismiss={() => setShowTutorialModal(false)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

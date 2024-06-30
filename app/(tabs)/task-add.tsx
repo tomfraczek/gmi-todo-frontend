@@ -59,9 +59,8 @@ const TaskAddScreen: React.FC = () => {
         />
 
         <Button
-          className="mt-4 w-full"
+          className="mt-4 w-full bg-primary"
           textColor="white"
-          buttonColor="blue"
           onPress={handleSubmit(submit)}
         >
           Submit
