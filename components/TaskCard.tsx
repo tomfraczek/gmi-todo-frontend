@@ -1,4 +1,4 @@
-import { Task } from "@/app";
+import { Task } from "@/helpers/api";
 import { View, Text, TouchableWithoutFeedback } from "react-native";
 import { Icon } from "react-native-paper";
 

@@ -1,9 +1,8 @@
 import { AppDispatch } from "@/store/store";
 import { deleteTaskThunk, updateTaskThunk } from "@/store/taskSlice";
-import { useRouter } from "expo-router";
 import { View, Text } from "react-native";
 import { Button, Modal, Portal } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 type ConfirmModalProps = {
   visible: boolean;
@@ -18,7 +17,6 @@ const ConfirmModal = ({
   visible,
   onDismiss,
 }: ConfirmModalProps) => {
-  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
   const containerStyle = {
@@ -30,14 +28,9 @@ const ConfirmModal = ({
 
   const handleMoveToBin = async () => {
     try {
-      if (status === "bin") {
-        await dispatch(deleteTaskThunk(Number(id))).unwrap();
-        router.back();
-      } else {
-        await dispatch(
-          updateTaskThunk({ id: Number(id), updateData: { status: "bin" } })
-        ).unwrap();
-      }
+      await dispatch(
+        updateTaskThunk({ id: Number(id), updateData: { status: "bin" } })
+      ).unwrap();
       onDismiss();
     } catch (error) {
       console.error("Error moving task to bin:", error);
@@ -47,7 +40,7 @@ const ConfirmModal = ({
   const handleDeletePermanently = async () => {
     try {
       await dispatch(deleteTaskThunk(Number(id))).unwrap();
-      router.back();
+      onDismiss();
     } catch (error) {
       throw new Error("Error permanently deleting task");
     }

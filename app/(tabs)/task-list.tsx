@@ -17,7 +17,7 @@ const TaskListScreen = () => {
 
   useEffect(() => {
     dispatch(fetchTasks());
-  }, [dispatch]);
+  }, []);
 
   const renderTasks = (status: string, title: string) => {
     const filteredTasks = tasks.filter((task) => task.status === status);
@@ -25,7 +25,7 @@ const TaskListScreen = () => {
       <SafeAreaView className="mb-4 p-4">
         <Text className="text-2xl font-bold mb-2">{title}</Text>
         {filteredTasks.length > 0 ? (
-          filteredTasks.map((item, i) => (
+          filteredTasks.reverse().map((item, i) => (
             <View className="mb-4" key={item.title + i}>
               <SwipeableRow
                 key={item.id}
@@ -88,7 +88,7 @@ const TaskListScreen = () => {
   };
 
   const isDone = tasks.filter((task) => task.status !== "bin").length === 0;
-  const activeTasks = tasks.filter((task) => task.status !== "bin").length;
+  const activeTasks = tasks.filter((task) => task.status === "pending").length;
 
   if (loading) {
     return (

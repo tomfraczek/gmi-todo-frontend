@@ -7,9 +7,14 @@ import { RootState, AppDispatch } from "@/store/store";
 import { fetchTasks, updateTaskThunk } from "@/store/taskSlice";
 import { useEffect, useState } from "react";
 import SwipeableRow from "@/components/SwipeableRow";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const BinScreen: React.FC = () => {
-  const [_, setShowConfirmModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<{
+    id: number;
+    status: string;
+  } | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const tasks = useSelector((state: RootState) => state.tasks.tasks);
   const router = useRouter();
@@ -17,6 +22,11 @@ const BinScreen: React.FC = () => {
   useEffect(() => {
     dispatch(fetchTasks());
   }, [dispatch]);
+
+  const handleRightAction = (id: number, status: string) => {
+    setSelectedTask({ id, status });
+    setShowConfirmModal(true);
+  };
 
   const renderTasks = (status: string, title: string) => {
     const filteredTasks = tasks.filter((task) => task.status === status);
@@ -29,7 +39,7 @@ const BinScreen: React.FC = () => {
               <SwipeableRow
                 key={item.id}
                 leftActionText="Restore from Recycle Bin"
-                rightActionText="Delete permanetly"
+                rightActionText="Delete permanently"
                 onLeftAction={() =>
                   dispatch(
                     updateTaskThunk({
@@ -38,7 +48,7 @@ const BinScreen: React.FC = () => {
                     })
                   )
                 }
-                onRightAction={() => setShowConfirmModal(true)}
+                onRightAction={() => handleRightAction(item.id, item.status)}
               >
                 <TaskCard
                   onPress={() => router.push(`/task/${item.id}`)}
@@ -48,13 +58,23 @@ const BinScreen: React.FC = () => {
             </View>
           ))
         ) : (
-          <Text className="text-gray-500">No tasks in this category</Text>
+          <Text className="text-gray-500">The bin is empty</Text>
         )}
       </SafeAreaView>
     );
   };
 
-  return <SafeAreaView>{renderTasks("bin", "Trash Bin")}</SafeAreaView>;
+  return (
+    <SafeAreaView>
+      {renderTasks("bin", "Trash Bin")}
+      <ConfirmModal
+        visible={showConfirmModal}
+        onDismiss={() => setShowConfirmModal(false)}
+        status={selectedTask?.status}
+        id={selectedTask?.id}
+      />
+    </SafeAreaView>
+  );
 };
 
 export default BinScreen;

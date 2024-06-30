@@ -2,12 +2,12 @@ import axios from "axios";
 
 const API_URL = "http://192.168.1.6:3000/api/tasks/";
 
-export interface Task {
+export type Task = {
   id: number;
   title: string;
   description: string;
   status: string;
-}
+};
 
 export const getAllTasks = async (): Promise<Task[]> => {
   const response = await axios.get<Task[]>(API_URL);
@@ -19,8 +19,8 @@ export const getTask = async (id: number): Promise<Task> => {
   return response.data;
 };
 
-export const createTask = async (updateData: Partial<Task>): Promise<Task> => {
-  const response = await axios.post<Task>(API_URL, updateData);
+export const createTask = async (data: Partial<Task>): Promise<Task> => {
+  const response = await axios.post<Task>(API_URL, data);
   return response.data;
 };
 

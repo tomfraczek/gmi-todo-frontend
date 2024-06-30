@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet } from "react-native";
-import axios from "axios";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { View, Text, TextInput } from "react-native";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useForm,
@@ -10,20 +8,21 @@ import {
   FieldValues,
 } from "react-hook-form";
 import { Button } from "react-native-paper";
-import { Task, getAllTasks, createTask } from "@/helpers/api";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { createNewTask } from "@/store/taskSlice";
+import ROUTES from "@/constants/routes";
 
 const TaskAddScreen: React.FC = () => {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  const dispatch = useDispatch<AppDispatch>();
+  const { reset, control, handleSubmit } = useForm();
   const router = useRouter();
 
-  const submit: SubmitHandler<FieldValues> = async (data) => {
+  const submit: SubmitHandler<FieldValues> = (data) => {
     const tasksData = { ...data, status: "pending" };
-    const newTask = await createTask(tasksData);
-    router.push("/(tabs)/task-list");
+    dispatch(createNewTask(tasksData));
+    reset();
+    router.push(ROUTES.TASK_LIST);
   };
 
   return (

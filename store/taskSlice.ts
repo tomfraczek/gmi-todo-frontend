@@ -9,7 +9,7 @@ import {
   Task,
 } from "../helpers/api";
 
-interface TaskState {
+export interface TaskState {
   tasks: Task[];
   currentTask: Task | null;
   loading: boolean;

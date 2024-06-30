@@ -8,7 +8,7 @@ import { RootState, AppDispatch } from "@/store/store";
 import { fetchTask, updateTaskThunk } from "@/store/taskSlice";
 import EditTaskModal from "@/components/EditTaskModal";
 
-const TaskScreen: React.FC = () => {
+const TaskScreen = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const { id } = useLocalSearchParams();
