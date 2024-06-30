@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import {
   getAllTasks,
+  getTask,
   createTask,
   updateTask,
   deleteTask,
@@ -10,12 +11,14 @@ import {
 
 interface TaskState {
   tasks: Task[];
+  currentTask: Task | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: TaskState = {
   tasks: [],
+  currentTask: null,
   loading: false,
   error: null,
 };
@@ -25,6 +28,15 @@ export const fetchTasks = createAsyncThunk("tasks/fetchTasks", async () => {
   const response = await getAllTasks();
   return response;
 });
+
+// Async thunk to fetch a single task
+export const fetchTask = createAsyncThunk(
+  "tasks/fetchTask",
+  async (id: number) => {
+    const response = await getTask(id);
+    return response;
+  }
+);
 
 // Async thunk to create a new task
 export const createNewTask = createAsyncThunk(
@@ -71,6 +83,18 @@ const taskSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || "Failed to fetch tasks";
       })
+      .addCase(fetchTask.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTask.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentTask = action.payload;
+      })
+      .addCase(fetchTask.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch task";
+      })
       .addCase(createNewTask.fulfilled, (state, action) => {
         state.tasks.push(action.payload);
       })
@@ -82,9 +106,15 @@ const taskSlice = createSlice({
         if (index !== -1) {
           state.tasks[index] = updatedTask;
         }
+        if (state.currentTask && state.currentTask.id === updatedTask.id) {
+          state.currentTask = updatedTask;
+        }
       })
       .addCase(deleteTaskThunk.fulfilled, (state, action) => {
         state.tasks = state.tasks.filter((task) => task.id !== action.payload);
+        if (state.currentTask && state.currentTask.id === action.payload) {
+          state.currentTask = null;
+        }
       });
   },
 });

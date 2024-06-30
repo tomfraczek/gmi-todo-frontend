@@ -2,18 +2,21 @@ import { View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import TaskCard from "@/components/TaskCard";
-import useTask from "@/hooks/useTask";
-
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-}
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "@/store/store";
+import { fetchTasks, updateTaskThunk } from "@/store/taskSlice";
+import { useEffect, useState } from "react";
+import SwipeableRow from "@/components/SwipeableRow";
 
 const BinScreen: React.FC = () => {
-  const { tasks } = useTask();
+  const [_, setShowConfirmModal] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const tasks = useSelector((state: RootState) => state.tasks.tasks);
   const router = useRouter();
+
+  useEffect(() => {
+    dispatch(fetchTasks());
+  }, [dispatch]);
 
   const renderTasks = (status: string, title: string) => {
     const filteredTasks = tasks.filter((task) => task.status === status);
@@ -23,10 +26,25 @@ const BinScreen: React.FC = () => {
         {filteredTasks.length > 0 ? (
           filteredTasks.map((item, i) => (
             <View className="mb-4" key={item.title + i}>
-              <TaskCard
-                onPress={() => router.push(`/task/${item.id}`)}
-                item={item}
-              />
+              <SwipeableRow
+                key={item.id}
+                leftActionText="Restore from Recycle Bin"
+                rightActionText="Delete permanetly"
+                onLeftAction={() =>
+                  dispatch(
+                    updateTaskThunk({
+                      id: item.id,
+                      updateData: { status: "pending" },
+                    })
+                  )
+                }
+                onRightAction={() => setShowConfirmModal(true)}
+              >
+                <TaskCard
+                  onPress={() => router.push(`/task/${item.id}`)}
+                  item={item}
+                />
+              </SwipeableRow>
             </View>
           ))
         ) : (
